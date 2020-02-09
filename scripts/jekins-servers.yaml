@@ -10,6 +10,10 @@ Parameters:
     Description: Name of the student who created the resources
     Type: String
 
+  PemKeyName:
+    Description: Name of the Key name that is required for SSH
+    Type: String
+
 Resources:
   WebServerSecGroup:
     Type: "AWS::EC2::SecurityGroup"
@@ -40,12 +44,18 @@ Resources:
         - Key: StudentName
           Value: !Ref StudentName
 
+  ProfileWithRolesForOurApp:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - udacityCICDrole
+
   JekinsHost:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-07ebfd5b3428b6f4d # this AMI ID may not be available. Find a new base line Ubuntu image.
       InstanceType: t2.micro
-      KeyName: udacity
+      KeyName: !Ref PemKeyName
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -55,6 +65,10 @@ Resources:
           sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
           sudo apt-get update
           sudo apt-get install -y jenkins
+          sudo apt install tidy
+          sudo apt install docker.io
+          sudo usermod -aG docker jenkins
+          sudo systemctl restart jenkins
       NetworkInterfaces:
         - AssociatePublicIpAddress: "true"
           DeviceIndex: "0"
@@ -63,6 +77,8 @@ Resources:
               !Sub "${ProjectName}-PUB1-SN"
           GroupSet:
             - Ref: WebServerSecGroup
+      IamInstanceProfile:
+        Ref: ProfileWithRolesForOurApp
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName} Jekins Host

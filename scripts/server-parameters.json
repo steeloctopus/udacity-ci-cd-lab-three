@@ -6,5 +6,9 @@
   {
     "ParameterKey":"StudentName",
     "ParameterValue": "D.Milburn"
+  },
+  {
+    "ParameterKey":"PemKeyName",
+    "ParameterValue": "udacity"
   }
 ]
